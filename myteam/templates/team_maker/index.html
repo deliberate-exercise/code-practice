@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Team Maker</h2>
+    <ul>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'common:logout' %}">{{ user.username }} (Logout) </a></li>
+        {% else %}
+        <li><a href="{% url 'common:login' %}">로그인</a></li>
+        {% endif %}
+        <li>Random</li>
+        <li>Balance</li>
+    </ul>
+</div>
+{% endblock %}
