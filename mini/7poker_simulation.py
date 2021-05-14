@@ -4,24 +4,17 @@ from collections import defaultdict, Counter
 # 7포커 족보 획득 확률 
 
 # 포커 카드 섞기
-def shuffler(realize=False):
+def shuffler():
     suit = [i for i in range(4)]
     denom = [i for i in range(1, 14)]
     deck = [(s, d) for s in suit for d in denom]
     
     random.shuffle(deck)
-    if not realize: return deck
-    else:
-        d1 = {0: 'Spade', 1: 'Heart', 2: 'Diamond', 3: 'Club'}
-        d2 = {1: 'Ace', 11: 'Jack', 12: 'Queen', 13: 'King'}
-        for i in range(2, 11): d2[i] = i
-
-        deck = list(map(lambda x: (d1[x[0]], d2[x[1]]), deck))
-        return deck
+    return deck
 
 
 # 족보 확인
-def made(hands, realize=False):
+def made(hands):
     arr = [0]
     suit = []
     denom = []
@@ -37,7 +30,7 @@ def made(hands, realize=False):
     elif count_denom[0][1] == 4: arr.append(7)                              # 포 카드
 
 
-    # 스트레이트 / 플러시 / 스트레이트 플러시
+    # 스트레이트 / 플러시 / 스트레이트 플러시 / 로열 스트레이트 플러시
     hand_copy = sorted(hands, key=lambda x: x[1])
     if hand_copy[0][1] == 1: hand_copy.insert(0, (hand_copy[-1][0], 14))
 
@@ -48,31 +41,33 @@ def made(hands, realize=False):
         bin_denom[s][d-1] = 1
         bin_denom[4][d-1] = 1
     
-    for i in range(5):
+    for i in range(4):
         flush = False
         straight = False
-        straight_flush = False
-        if i < 4:
-            if n_suits[i] < 5: continue
-            else:
-                flush = True
-                for j in range(10):
-                    if sum(bin_denom[i][j:j+5]) == 5: 
-                        straight_flush = True                
+        royal = False
+        if n_suits[i] < 5: continue
         else:
+            flush = True
             for j in range(10):
                 if sum(bin_denom[i][j:j+5]) == 5: 
                     straight = True
-                    
-        if straight_flush: arr.append(8)
-        if flush: arr.append(5)
-        if straight: arr.append(4)
+                    if j == 9: royal = True
 
+        if flush and straight and royal: arr.append(9)
+        elif flush and straight: arr.append(8)
+        elif flush: arr.append(5)
+
+    straight = False
+    for j in range(10):
+        if sum(bin_denom[4][j:j+5]) == 5: straight = True
+                    
+    if straight: arr.append(4)
+    
     return max(arr)
 
     
 def simulator(n_times):
-    arr = [0]*9
+    arr = [0]*10
     for _ in range(n_times):
         deck = shuffler()
         hand = deck[:7]
@@ -82,13 +77,12 @@ def simulator(n_times):
 
 
 # 시뮬레이션 및 결과 출력
-n_times = 200000
+n_times = 1000000
 simulation = simulator(n_times)
 hands = [
     'High Card', 'One Pair', 'Two Pair', 'Triple', 'Straight', 
-    'Flush', 'Full House', 'Four Cards', 'Straight Flush'
+    'Flush', 'Full House', 'Four Card', 'Straight Flush', 'Royal Straight Flush'
 ]
 probs = map(lambda x: x*100/n_times, simulation)
 
-for h, p in zip(hands, probs):
-    print(h.ljust(20), p)
+for h, p in zip(hands, probs): print(h.ljust(30), p)
